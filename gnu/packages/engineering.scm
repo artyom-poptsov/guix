@@ -59,6 +59,7 @@
   #:use-module (guix build-system gnu)
   #:use-module (guix build-system python)
   #:use-module (guix build-system qt)
+  #:use-module (guix build-system maven)
   #:use-module (gnu packages)
   #:use-module (gnu packages algebra)
   #:use-module (gnu packages autotools)
@@ -96,6 +97,7 @@
   #:use-module (gnu packages image)
   #:use-module (gnu packages image-processing)
   #:use-module (gnu packages imagemagick)
+  #:use-module (gnu packages java)
   #:use-module (gnu packages libevent)
   #:use-module (gnu packages libusb)
   #:use-module (gnu packages linux)               ;FIXME: for pcb
@@ -3119,3 +3121,33 @@ visualization, matrix manipulation.")
     (description "PrusaSlicer takes 3D models (STL, OBJ, AMF) and converts them into
 G-code instructions for FFF printers or PNG layers for mSLA 3D printers.")
     (license license:agpl3)))
+
+(define-public ugs
+  (package
+    (name "ugs")
+    (version "2.0.8")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/winder/Universal-G-Code-Sender")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0p9sy3h3msd30q9gv2as1gqgkvf4iigjw7iw2dx62748hf9m0z0x"))))
+    (build-system maven-build-system)
+    (arguments
+     `(#:tests? #f)) ; require mockito 2
+    (inputs
+     `(("python" ,python-3)))           ; For ./scripts/update_languages.py
+    (native-inputs
+     `(("java-junit"   ,java-junit)
+       ("java-mockito" ,java-mockito-1)
+       ("java-hamcrest-core" ,java-hamcrest-core)))
+    (home-page "https://github.com/winder/Universal-G-Code-Sender")
+    (synopsis
+     "A cross-platform G-Code sender for GRBL, Smoothieware, TinyG and G2core.")
+    (description
+     "Universal G-Code Sender is a Java based, cross platform G-Code
+sender, compatible with GRBL, TinyG, g2core and Smoothieware.")
+    (license license:gpl3)))

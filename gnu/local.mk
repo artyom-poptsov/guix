@@ -416,6 +416,7 @@ GNU_SYSTEM_MODULES =				\
   %D%/packages/mp3.scm				\
   %D%/packages/mpi.scm				\
   %D%/packages/multiprecision.scm		\
+  %D%/packages/multiseat.scm			\
   %D%/packages/music.scm			\
   %D%/packages/musl.scm				\
   %D%/packages/mtools.scm			\

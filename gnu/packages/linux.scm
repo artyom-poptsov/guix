@@ -59,6 +59,8 @@
 ;;; Copyright © 2021 Josselin Poiret <josselin.poiret@protonmail.ch>
 ;;; Copyright © 2021 Olivier Dion <olivier.dion@polymtl.ca>
 ;;; Copyright © 2021 Solene Rapenne <solene@perso.pw>
+;;; Copyright © 2021 Artyom V. Poptsov <poptsov.artyom@gmail.com>
+
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -8754,3 +8756,41 @@ older system-wide @file{/sys} interface.")
     (license (list license:lgpl2.1+   ;; libgpiod
                    license:gpl2+      ;; gpio-tools
                    license:lgpl3+)))) ;; C++ bindings
+
+(define-public libtree
+  (package
+    (name "libtree")
+    (version "3.0.1")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/haampie/libtree")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1j56j1k4rlm0wi6jvdmk7j7nf4wrmc5gyhgp6vjf180hpgwlqz92"))))
+    (arguments
+     `(#:phases
+       (modify-phases %standard-phases
+         (delete 'check)
+         (delete 'configure)
+         (add-before 'build 'patch
+           (lambda* (#:key outputs #:allow-other-keys)
+             (substitute* "Makefile"
+               (("\\$\\(DESTDIR\\)\\$\\(BINDIR\\)")
+                (format #f "~a/bin/" (assoc-ref outputs "out")))
+               (("\\$\\(DESTDIR\\)\\$\\(SHAREDIR\\)")
+                (format #f "~a/share/" (assoc-ref outputs "out"))))))
+         (replace 'build
+           (lambda _
+             (setenv "CC" "gcc")
+             (setenv "LDFLAGS" "-static")
+             (invoke "make"))))))
+    (build-system gnu-build-system)
+    (home-page "https://github.com/haampie/libtree")
+    (synopsis "@command{ldd} as a tree")
+    (description
+     "This tool turns @command{ldd} into a tree and explains how shared
+libraries are found or why they cannot be located.")
+    (license license:expat)))

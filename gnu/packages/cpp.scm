@@ -56,6 +56,7 @@
   #:use-module (guix build-system gnu)
   #:use-module (guix build-system meson)
   #:use-module (guix build-system python)
+  #:use-module (guix build-system scons)
   #:use-module (guix modules)
   #:use-module (guix gexp)
   #:use-module (gnu packages)
@@ -1870,3 +1871,66 @@ std::filesystem compatible helper library, based on the C++17 and C++20 specs,
 but implemented for C++11, C++14, C++17 or C++20.")
     (home-page "https://github.com/gulrak/filesystem")
     (license license:expat)))
+
+(define-public cbang
+  (package
+    (name "cbang")
+    (version "1.6.1")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/CauldronDevelopmentLLC/cbang")
+                    (commit version)))
+              (file-name (git-file-name name version))
+              ;; Patching is needed to allow to run the tests with Python 3.
+              (patches (search-patches "cbang-fix-test-harness.patch"))
+              (sha256
+               (base32
+                "026nwaapnald4fdbfdw3pfdsj8l27b87m5sfyp13qywnhsqlcrm9"))))
+    (build-system scons-build-system)
+    (arguments
+     (list
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'fix-python
+            (lambda* (#:key inputs #:allow-other-keys)
+              (substitute* "config/test/__init__.py"
+                (("cmd = 'python tests/testHarness")
+                 (format #f
+                         "cmd = '~a/bin/python3 tests/testHarness"
+                         (assoc-ref inputs "python"))))))
+          (replace 'install
+            (lambda* (#:key outputs #:allow-other-keys)
+              (let ((out  (assoc-ref outputs "out")))
+                (invoke "scons"
+                        (string-append "prefix=" out)
+                        (string-append "actual-prefix=" out)
+                        "install")))))))
+    (native-inputs
+     (list openssl
+           python))
+    (inputs (list python))
+    (home-page "https://github.com/CauldronDevelopmentLLC/cbang")
+    (synopsis "C! (cbang) is a library of cross-platform C++ utilities")
+    (description "The C! (or \"cbang\") library is a collection of C++ utility
+libraries.
+
+Many of the facilities of C! are geared towards cross-platform application
+development and providing basic services that most applications need such as a
+configuration system, run-time build information, logging facilities, threads,
+smart pointers, simple embedded scripting, etc.")
+    ;; XXX: Licensing of the library is a mess as the library includes lots of
+    ;;      parts from other open-source/free libraries.
+    ;;
+    ;;      cbang authors included all the licenses of the original libraries to the repository:
+    ;;      <https://github.com/CauldronDevelopmentLLC/cbang/tree/master/src/resources/licenses>
+    (license (list license:lgpl2.1      ; cbang code.
+                   ;; Licenses of the included libraries.
+                   license:boost1.0
+                   license:non-copyleft
+                   license:expat
+                   license:bsd-2
+                   license:bsd-3
+                   license:public-domain
+                   license:zlib))))
+

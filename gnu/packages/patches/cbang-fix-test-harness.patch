@@ -1,0 +1,265 @@
+This patch created by Artyom V. Poptsov <poptsov.artyom@gmail.com>
+
+Upsteam test facilities use Python 2 code to run the tests.  This patch allows
+to run tests with Python 3 it by patching 'tests/testHarness' file.
+
+diff --git a/tests/testHarness b/tests/testHarness
+index b63063f3..9ce268fe 100755
+--- a/tests/testHarness
++++ b/tests/testHarness
+@@ -50,7 +50,7 @@ import sqlite3
+ import copy
+ import operator
+ import json
+-from StringIO import StringIO
++from io import StringIO
+ 
+ try:
+   from collections import OrderedDict
+@@ -108,7 +108,7 @@ def labeled_bar(label):
+   width1 = (screen_width - length) / 2
+   width2 = screen_width - length - width1
+ 
+-  str = width1 * '*' + ' ' + label + ' ' + width2 * '*' + '\n'
++  str = int(width1) * '*' + ' ' + label + ' ' + int(width2) * '*' + '\n'
+ 
+   output_stream.write(str)
+ 
+@@ -139,7 +139,7 @@ def copy_pattern(pattern, dst, ignores = []):
+ 
+   for path in glob.glob(pattern):
+     dir, file = os.path.split(path)
+-    if len(ignore(dir, [file])): continue
++    if len(list(ignore(dir, [file]))): continue
+ 
+     if os.path.isdir(path):
+       shutil.copytree(path, dst + '/' + file, ignore = ignore)
+@@ -174,7 +174,7 @@ def write_file(path, data):
+ 
+ 
+ def split_cmd_line(cmd):
+-  if isinstance(cmd, basestring): return shlex.split(str(cmd))
++  if isinstance(cmd, str): return shlex.split(str(cmd))
+   return cmd
+ 
+ 
+@@ -195,7 +195,7 @@ def quote_cmd(command):
+ def execute_proc(command, timeout, **kwargs):
+   try:
+     # Check for .exe, needed in Windows cross compiled environments on Linux
+-    command = split_cmd_line(command)
++    command = list(split_cmd_line(command))
+     if not os.path.isfile(command[0]) and os.path.isfile(command[0] + '.exe'):
+       command[0] += '.exe'
+ 
+@@ -207,21 +207,21 @@ def execute_proc(command, timeout, **kwargs):
+       if timeout and timeout < start - time.time():
+         if sys.platform == 'win32': proc.kill()
+         else: os.killpg(proc.pid)
+-        raise Exception, 'Timedout'
++        raise Exception('Timedout')
+       time.sleep(0.1)
+ 
+     return proc.returncode
+ 
+-  except Exception, e:
+-    raise Exception, 'Running: ' + ' '.join(command) + \
+-        '\nCaused by:' + str(e)
++  except Exception as e:
++    raise Exception('Running: ' + ' '.join(list(command)) + \
++        '\nCaused by:' + str(e))
+ 
+ 
+ def remove_tree(path):
+   mode = os.stat(path).st_mode
+ 
+   if not os.path.islink(path) and os.path.isdir(path):
+-    if (mode & 0700) != 0700: os.chmod(path, mode | 0700)
++    if (mode & 0o700) != 0o700: os.chmod(path, mode | 0o700)
+ 
+     for name in os.listdir(path):
+       remove_tree(path + '/' + name)
+@@ -229,8 +229,8 @@ def remove_tree(path):
+     os.rmdir(path)
+ 
+   else:
+-    if sys.platform == 'win32' and (mode & 0200) != 0200:
+-      os.chmod(path, mode | 0200)
++    if sys.platform == 'win32' and (mode & 0o200) != 0o200:
++      os.chmod(path, mode | 0o200)
+     os.remove(path)
+ 
+ 
+@@ -585,7 +585,7 @@ class CheckFile(Check):
+     self.reason = filename
+     self.exists = exists
+ 
+-    if isinstance(filter, basestring): filter = MatchFilter(filter)
++    if isinstance(filter, str): filter = MatchFilter(filter)
+     if isinstance(filter, (list, tuple)):
+       if not filter[0] in filter_classes:
+         raise 'Invalid filter "%s"' % filter[0]
+@@ -782,7 +782,7 @@ class CheckFilePattern(CheckFile):
+ 
+       return CheckFile.check(self, test)
+ 
+-    except Exception, e:
++    except Exception as e:
+       if options.verbose: output_stream.write(str(e))
+       return FAILED
+ 
+@@ -862,8 +862,8 @@ class Table:
+ 
+     # Check row width
+     if self.columns != len(row):
+-      raise Exception, \
+-          'Row has ' + len(row) + ' columns, expected ' + self.columns
++      raise Exception(\
++          'Row has ' + len(row) + ' columns, expected ' + self.columns)
+ 
+     self.rows.append(row)
+ 
+@@ -923,7 +923,7 @@ class CheckDB(CheckFile):
+ 
+     if sql is None:
+       if cols is None or table is None:
+-        raise Exception, 'Must set either "sql" or "cols" and "table"'
++        raise Exception('Must set either "sql" or "cols" and "table"')
+       if orderBy is None: orderBy = [cols[0]]
+       self.sql = 'SELECT ' + ', '.join(cols) + ' FROM "' + table + \
+           '" ORDER BY ' + ', '.join(orderBy)
+@@ -948,7 +948,7 @@ class CheckDB(CheckFile):
+       c.execute(self.sql)
+       for row in c: table.add_row(map(str, row))
+       c.close()
+-    except Exception, e: return FAILED
++    except Exception as e: return FAILED
+ 
+     # Write
+     write_file(self.get_output(test),
+@@ -1027,7 +1027,7 @@ class Unit:
+       if os.path.exists(path):
+         self.config.update(json.loads(read_file(path)))
+ 
+-    except Exception, e:
++    except Exception as e:
+       raise HarnessError('Failed to parse test.json file in %s: %s' % (
+          self.get_full_name(), e))
+ 
+@@ -1041,7 +1041,7 @@ class Unit:
+       for check in checks:
+         if isinstance(check, Check): self.check.add(check)
+         else:
+-          if isinstance(check, basestring):
++          if isinstance(check, str):
+             check = [check]
+ 
+           if isinstance(check, (list, tuple)) and len(check):
+@@ -1064,11 +1064,11 @@ class Unit:
+ 
+   def config_get_list(self, name, default = None, split = str.split):
+     value = self.config.get(name, default)
+-    if isinstance(value, basestring): value = split(value)
++    if isinstance(value, str): value = split(value)
+ 
+     try:
+       return map(lambda item: item % self.config, value)
+-    except Exception, e:
++    except Exception as e:
+       raise HarnessError('Error resolving %s "%s": %s' % (name, value, e))
+ 
+ 
+@@ -1141,11 +1141,11 @@ class Unit:
+   def get_stdin_file(self):
+     stdin = self.config.get('stdin', None)
+ 
+-    if isinstance(stdin, basestring): return StringIO(stdin)
++    if isinstance(stdin, str): return StringIO(stdin)
+ 
+     if stdin is None and 'stdin_file' in self.config:
+       path = self.config_get('stdin_file')
+-      if os.path.exists(path): return open(path, 'r')
++      if os.path.exists(path): return open(path, 'rb')
+ 
+     return stdin
+ 
+@@ -1171,7 +1171,7 @@ class Unit:
+     # Resolve command vars refs
+     try:
+       command = map(lambda s: s % self.config, command)
+-    except Exception, e:
++    except Exception as e:
+       raise HarnessError('Error resolving command "%s": %s' % (command, e))
+ 
+     return command
+@@ -1245,13 +1245,13 @@ class Unit:
+       self.status = self.check.check(self)
+ 
+       # Check status
+-      if self.status is None: raise Exception, 'Test result not set'
++      if self.status is None: raise Exception('Test result not set')
+       self.reason = self.check.reason
+ 
+     # Logging
+     self.log.start_files()
+     stdin = self.get_stdin_file()
+-    if stdin is not None: self.log.insert('stdin', stdin.read(10000))
++    if stdin is not None: self.log.insert('stdin', stdin.read())
+     self.check.log(self, self.failed())
+     self.log.end_files()
+     self.log.end_test(self)
+@@ -1455,7 +1455,7 @@ class TestSuite:
+     if os.path.exists(path):
+       try:
+         self.config.update(json.loads(read_file(path)))
+-      except Exception, e:
++      except Exception as e:
+         raise HarnessError('Failed to parse suite test.json: ' + str(e))
+ 
+       if 'command' in self.config:
+@@ -1575,8 +1575,8 @@ class TestSuite:
+       env.update(globals())
+ 
+       try: execfile(script, env)
+-      except Exception, e:
+-        raise Exception, 'Exception in "%s": %s' % (script, str(e))
++      except Exception as e:
++        raise Exception('Exception in "%s": %s' % (script, str(e)))
+ 
+       if not 'Suite' in env:
+         raise HarnessError(
+@@ -1655,7 +1655,7 @@ class TestSuite:
+     errStr = "'%s' not found and variable '%s' not set" % (name, conf_name)
+     if home_var is not None and home_var in os.environ:
+       errStr += ' and ' + home_var + '=' + os.environ[home_var]
+-    raise Exception, errStr
++    raise Exception(errStr)
+ 
+ 
+ class TestResults:
+@@ -1893,7 +1893,7 @@ options, args = parser.parse_args()
+ # Change dir
+ if options.chdir is not None:
+   os.chdir(options.chdir)
+-  if options.verbose: print "Changed directory: " + os.getcwd()
++  if options.verbose: print("Changed directory: " + os.getcwd())
+ 
+ # Load config file
+ if options.config is not None: config_file = options.config
+@@ -1925,14 +1925,14 @@ if options.valgrind:
+ 
+ if options.dump_config:
+   for name, value in config.items():
+-    print "%s=%s" % (name, value)
++    print("%s=%s" % (name, value))
+   sys.exit(0)
+ 
+ # Run
+ try:
+   sys.exit(TestHarness(config).run(cmd_args))
+ 
+-except HarnessError, e:
++except HarnessError as e:
+   sys.stdout.flush()
+   if e.show_usage: parser.error(e.msg)
+   else: sys.stderr.write('ERROR: ' + e.msg + '\n')

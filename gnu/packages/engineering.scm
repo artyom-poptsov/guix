@@ -3688,3 +3688,46 @@ hierarchical and parametric design.  It can generate VHDL, Verilog or Spice
 netlists from the drawn schematic, allowing the simulation of the circuit.")
       (home-page "https://xschem.sourceforge.io/stefan/index.html")
       (license license:gpl2+))))
+
+(define-public candle
+  (package
+    (name "candle")
+    (version "1.2b")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/Denvi/Candle")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "1rinblzqg8xbi4zcyx6v3k7g2kdrgmwm7xwb6fryb8s0bd21jppv"))))
+    (build-system qt-build-system)
+    ;; (native-inputs
+    ;;  ())
+    ;; (inputs)
+    (arguments
+     (list #:phases
+           #~(modify-phases %standard-phases
+               (replace 'configure
+                 (lambda* (#:key outputs #:allow-other-keys)
+                   (chdir "src")
+                   (invoke "qmake"
+                           (string-append "PREFIX=" (assoc-ref outputs "out")))
+                   #t)))))
+    (home-page "https://github.com/Denvi/Candle")
+    (synopsis "GRBL controller with G-Code visualizer")
+    (description
+     "GRBL controller application with G-Code visualizer written in Qt.
+
+Supported functions:
+
+@itemize
+@item Controlling GRBL-based cnc-machine via console commands, buttons on
+form, numpad.
+@item Monitoring CNC-machine state.
+@item Loading, editing, saving and sending of G-code files to CNC-machine.
+@item Visualizing G-code files.
+@end itemize")
+    (license license:gpl3)))
+

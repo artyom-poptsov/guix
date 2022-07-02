@@ -3702,19 +3702,32 @@ netlists from the drawn schematic, allowing the simulation of the circuit.")
               (sha256
                (base32
                 "1rinblzqg8xbi4zcyx6v3k7g2kdrgmwm7xwb6fryb8s0bd21jppv"))))
-    (build-system qt-build-system)
-    ;; (native-inputs
-    ;;  ())
-    ;; (inputs)
+    (build-system gnu-build-system)
+    (native-inputs (list qttools))
+    (inputs (list qtbase-5 qtserialport))
     (arguments
-     (list #:phases
-           #~(modify-phases %standard-phases
-               (replace 'configure
-                 (lambda* (#:key outputs #:allow-other-keys)
-                   (chdir "src")
-                   (invoke "qmake"
-                           (string-append "PREFIX=" (assoc-ref outputs "out")))
-                   #t)))))
+     `(#:phases (modify-phases %standard-phases
+                  (add-after 'unpack 'fix-sources
+                    (lambda _
+                      (substitute* (find-files "." ".*\\.h")
+                        (("const char\\* what\\(\\) const override")
+                         "const char* what() const noexcept override"))))
+                  (replace 'configure
+                    (lambda* (#:key outputs #:allow-other-keys)
+                      (let ((out (assoc-ref outputs "out")))
+                        (chdir "src")
+                        (invoke "qmake"))))
+                  (add-after 'configure 'fix-makefile
+                    (lambda _
+                      (substitute* "Makefile"
+                        (("-pipe -Z7") "-pipe")
+                        (("LFLAGS.*=.*DEBUG .*OPT:REF -Wl,-O1")
+                         "LFLAGS        = -Wl,-O1"))))
+                  (replace 'install
+                    (lambda* (#:key outputs #:allow-other-keys)
+                      (let ((out (assoc-ref outputs "out")))
+                        (install-file "Candle"
+                                      (string-append out "/bin"))))))))
     (home-page "https://github.com/Denvi/Candle")
     (synopsis "GRBL controller with G-Code visualizer")
     (description

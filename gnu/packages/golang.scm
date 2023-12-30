@@ -9519,7 +9519,7 @@ transforms one JSON document into another through a JMESPath expression.")
 (define-public go-github-com-microcosm-cc-bluemonday
   (package
     (name "go-github-com-microcosm-cc-bluemonday")
-    (version "1.0.3")
+    (version "1.0.21")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9528,7 +9528,7 @@ transforms one JSON document into another through a JMESPath expression.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "071ph097c1iwbcc33x6kblj9rxb1r4mp3qfkrj4qw5mg7qcqxydk"))))
+                "08jicymiqqyqq133qk26q4a5i3glcsc17q75np4n70cn2b8y274h"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/microcosm-cc/bluemonday"))

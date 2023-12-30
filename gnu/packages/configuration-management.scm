@@ -1,5 +1,6 @@
 ;;; GNU Guix --- Functional package management for GNU
 ;;; Copyright © 2020 Oleg Pykhalov <go.wigust@gmail.com>
+;;; Copyright © 2023 Artyom V. Poptsov <poptsov.artyom@gmail.com>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -21,6 +22,7 @@
   #:use-module (guix build-system go)
   #:use-module (guix git-download)
   #:use-module (gnu packages golang)
+  #:use-module (gnu packages python)
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages textutils)
   #:use-module ((guix licenses) #:prefix license:)
@@ -32,7 +34,7 @@
     (name "chezmoi")
     ;; XXX: Make sure 7f238faa61e46d79b54d4d0ea8f0b5fc27db84b2 applied before
     ;; version update, which should fix @code{password-store} integration.
-    (version "1.8.1")
+    (version "2.28.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -41,12 +43,13 @@
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "1b8y0wq3myhvjdnwl0i4x85iil7i7kmsjajvbw1a47afm83jkbaw"))))
+                "0pbr4cy1850r30jhwrq57axgik6a601qpcqc7rjr5bd7gidxi711"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/twpayne/chezmoi"
        ;; We don't need to install the source code for end-user applications.
-       #:install-source? #f))
+       #:install-source? #f
+       #:go ,go-1.18))
     (native-inputs
      (list go-github-com-masterminds-sprig
            go-github-com-masterminds-goutils
@@ -65,7 +68,7 @@
            go-github-go-git
            go-github-com-google-go-github
            go-github-com-google-go-querystring
-           go-github-com-google-renameio
+           go-github-com-google-renameio-2.0
            go-github-com-microcosm-cc-bluemonday
            go-github-com-aymerick-douceur
            go-github-com-chris-ramon-douceur
@@ -80,7 +83,7 @@
            go-github-com-mattn-go-isatty
            go-github-com-mattn-go-runewidth
            go-github-com-olekukonko-tablewriter
-           go-github-com-pelletier-go-toml
+           go-github-com-pelletier-go-toml-2.0
            go-github-com-pkg-diff
            go-github-com-sergi-go-diff
            go-github-com-spf13-cobra
@@ -90,14 +93,36 @@
            go-github-com-twpayne-go-vfsafero
            go-github-com-twpayne-go-xdg
            go-github-com-yuin-goldmark
+           go-github-com-yuin-goldmark-emoji
            go-github-com-zalando-go-keyring
            go-github-com-godbus-dbus
            go-etcd-io-bbolt
            go-golang-org-x-crypto
            go-golang-org-x-net
+           go-golang-org-x-term
            go-golang-org-x-oauth2
            go-github-com-rogpeppe-go-internal
-           go-gopkg-in-errgo-fmt-errors))
+           go-gopkg-in-errgo-fmt-errors
+           go-github-com-aws-aws-sdk-go-v2
+           go-github-com-charmbracelet-bubbletea
+           go-github-com-charmbracelet-bubbles
+           go-github-com-charmbracelet-harmonica
+           go-github-com-charmbracelet-lipgloss
+           go-github-com-emirpasic-gods
+           go-github-com-go-git-gcfg
+           go-github-com-go-git-go-billy
+           go-github-com-google-go-github
+           go-github-com-atotto-clipboard
+           go-github-com-gregjones-httpcache
+           go-github-com-jbenet-go-context
+           go-github-com-kevinburke-ssh-config
+           go-github-com-mitchellh-go-homedir
+           go-github-com-muesli-reflow-wrap
+           go-github-com-bradenhilton-cityhash
+           go-github-com-bradenhilton-mozillainstallhash
+           go-github-com-peterbourgon-diskv
+           go-filippo-io-age
+           python))
     (home-page "https://www.chezmoi.io/")
     (synopsis "Personal configuration files manager")
     (description "This package helps to manage personal configuration files

@@ -94,6 +94,7 @@
   #:use-module (gnu packages textutils)
   #:use-module (gnu packages tls)
   #:use-module (gnu packages web)
+  #:use-module (gnu packages xdisorg)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1))
 
@@ -2842,6 +2843,54 @@ jar struct to manage the cookies added to the cookie jar.")
       (home-page "https://github.com/aki237/nscjar")
       (license license:expat))))
 
+(define-public go-github-com-bradenhilton-cityhash
+    (package
+      (name "go-github-com-bradenhilton-cityhash")
+      (version "1.0.0")
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://github.com/bradenhilton/cityhash")
+                      (commit (string-append "v" version))))
+                (file-name (git-file-name name version))
+                (sha256
+                 (base32
+                  "0rfmbis47m42w05inqmph7jk6kza79miq9ifqlsdiax38b684yky"))))
+      (build-system go-build-system)
+      (arguments
+       '(#:import-path "github.com/bradenhilton/cityhash"))
+      (synopsis "Google CityHash version 1 in Go")
+      (description "CityHash, a family of hash functions for strings.  This is
+essentially a fork of @url{https://github.com/zentures/cityhash} (previously
+@url{https://github.com/zhenjl/cityhash}), with changes to match the behaviour of
+version 1 of CityHash.")
+      (home-page "https://github.com/bradenhilton/cityhash")
+      (license license:expat)))
+
+(define-public go-github-com-bradenhilton-mozillainstallhash
+    (package
+      (name "go-github-com-bradenhilton-mozillainstallhash")
+      (version "1.0.1")
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://github.com/bradenhilton/mozillainstallhash")
+                      (commit (string-append "v" version))))
+                (file-name (git-file-name name version))
+                (sha256
+                 (base32
+                  "0j54ssnvk2vy77g23zrhi9acwblnamj63i7wmmdnb89fjg0xc9km"))))
+      (build-system go-build-system)
+      (arguments
+       '(#:import-path "github.com/bradenhilton/mozillainstallhash"))
+      (native-inputs
+       (list go-github-com-bradenhilton-cityhash go-golang-org-x-text))
+      (synopsis "Get hash to differentiate between Mozilla software installs")
+      (description "Gets the hash used to differentiate between installs of Mozilla
+software in @code{installs.ini} and @code{profiles.ini}.")
+      (home-page "https://github.com/bradenhilton/mozillainstallhash")
+      (license license:expat)))
+
 (define-public go-github-com-gizak-termui
   (package
     (name "go-github-com-gizak-termui")
@@ -5212,6 +5261,25 @@ updating files, like @command{tail -f}.")
     (synopsis "Go library for the TOML configuration language")
     (description "Go library for the TOML configuration language")
     (license license:expat)))
+
+(define-public go-github-com-pelletier-go-toml-2.0
+  (package
+    (inherit go-github-com-pelletier-go-toml)
+    (name "go-github-com-pelletier-go-toml")
+    (version "2.0.6")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/pelletier/go-toml")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32
+         "157159ybra60qacbphi8cdcc5aw4s9c900738n9h9bwiqwk8jwj5"))))
+    (native-inputs
+     (modify-inputs (package-native-inputs go-github-com-pelletier-go-toml)
+       (append go-github-com-stretchr-testify)))))
 
 (define-public go-github-com-subosito-gotenv
   (package
@@ -8441,7 +8509,7 @@ into URL query parameters.")
 (define-public go-github-com-google-go-github
   (package
     (name "go-github-com-google-go-github")
-    (version "26.1.3")
+    (version "48.0.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -8450,12 +8518,12 @@ into URL query parameters.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0x0zz1vcmllp6r6l2qin9b2llm5cxbf6n84rf99h8wrmhvzs2ipi"))))
+                "1gmjbknash7gi3yqvvyi3zqv6csajmd6fwq11hivhwa1sqflc6dr"))))
     (build-system go-build-system)
     (arguments
      `(#:tests? #f ;application/octet-stream instead of text/plain
-       #:import-path "github.com/google/go-github/v26/github"
-       #:unpack-path "github.com/google/go-github/v26"))
+       #:import-path "github.com/google/go-github/v48/github"
+       #:unpack-path "github.com/google/go-github/v48"))
     (native-inputs
      (list go-github-com-google-go-querystring go-golang-org-x-crypto))
     (home-page "https://github.com/google/go-github/")
@@ -8485,6 +8553,47 @@ GitHub API v3.")
     (description "@code{renameio} Go package provides a way to atomically
 create or replace a file or symbolic link.")
     (license license:asl2.0)))
+
+(define-public go-github-com-google-renameio-2.0
+  (package
+    (inherit go-github-com-google-renameio)
+    (name "go-github-com-google-renameio")
+    (version "2.0.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/google/renameio")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "13vc7p43zz5pmgli4k18b15khxpca1zd8v1ga0ryq7ddyz55fg7i"))))))
+
+(define-public go-github-com-gregjones-httpcache
+  (let ((commit "901d90724c7919163f472a9812253fb26761123d")
+        (revision "0"))
+    (package
+      (name "go-github-com-gregjones-httpcache")
+      (version (git-version "0.0.0" revision commit))
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://github.com/gregjones/httpcache")
+                      (commit commit)))
+                (file-name (git-file-name name version))
+                (sha256
+                 (base32
+                  "05r0xq51vfb55di11m7iv19341d73f7in33vq1ihcqs1nffdwiq0"))))
+      (build-system go-build-system)
+      (arguments
+       '(#:import-path "github.com/gregjones/httpcache"))
+      (synopsis "Transport for @code{http.Client} that will cache responses")
+      (description "Package @code{httpcache} provides a @code{http.RoundTripper}
+implementation that works as a mostly @url{https://tools.ietf.org/html/rfc7234, RFC
+7234} compliant cache for HTTP responses.  It is only suitable for use as a 'private'
+cache (i.e. for a web-browser or an API-client and not for a shared proxy).")
+      (home-page "https://github.com/gregjones/httpcache")
+      (license license:expat))))
 
 (define-public go-golang.org-x-sync-errgroup
   (let ((commit "cd5d95a43a6e21273425c7ae415d3df9ea832eeb")
@@ -9202,7 +9311,7 @@ the library more lightweight.")
 (define-public go-github-com-bmatcuk-doublestar
   (package
     (name "go-github-com-bmatcuk-doublestar")
-    (version "1.3.0")
+    (version "4.4.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9211,7 +9320,7 @@ the library more lightweight.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0bk5bixl6rqa8znxghyp6zndbccx9kdyrymjahgyp6qsrp7rk144"))))
+                "1yc49120l0xgygli0rpivhv8jcbdm6bf4f8lfz9gyj9w9nqbrk0h"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/bmatcuk/doublestar"
@@ -9540,6 +9649,57 @@ transforms one JSON document into another through a JMESPath expression.")
     (description "@code{bluemonday} is a HTML sanitizer implemented in Go.")
     (license license:bsd-3)))
 
+(define-public go-github-com-muesli-ansi
+  (let ((commit "276c6243b2f6df61db727937762b1a3f9cc12486")
+        (revision "0"))
+  (package
+    (name "go-github-com-muesli-ansi")
+    (version (git-version "0.0.0" revision commit))
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/muesli/ansi")
+             (commit commit)))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32
+         "1jr8kgn3vb72jmf4a8n52g876mfpbvk3310p8gsg7jkn338af4m9"))))
+    (build-system go-build-system)
+    (arguments
+     `(#:import-path "github.com/muesli/ansi"))
+    (propagated-inputs
+     (list go-github-com-mattn-go-runewidth
+           go-github-com-rivo-uniseg))
+    (home-page "https://github.com/muesli/ansi")
+    (synopsis "Raw ANSI sequence helpers")
+    (description
+     "Raw ANSI sequence helpers.")
+    (license license:expat))))
+
+(define-public go-github-com-muesli-cancelreader
+  (package
+    (name "go-github-com-muesli-cancelreader")
+    (version "0.2.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/muesli/cancelreader")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0mxmmy402762jpr37cgx5c86rfkkbrsaz97f1qi2ricg9mjsm8lx"))))
+    (build-system go-build-system)
+    (arguments
+     `(#:import-path "github.com/muesli/cancelreader"))
+    (native-inputs
+     (list go-golang-org-x-sys))
+    (home-page "https://github.com/muesli/cancelreader")
+    (synopsis "A cancelable reader for Go")
+    (description "A cancelable reader for Go.")
+    (license license:expat)))
+
 (define-public go-github-com-muesli-reflow-wordwrap
   (package
     (name "go-github-com-muesli-reflow-wordwrap")
@@ -9564,6 +9724,14 @@ transforms one JSON document into another through a JMESPath expression.")
     (description "This package provides a collection of ANSI-aware methods and
 io.Writers helping you to transform blocks of text.")
     (license license:expat)))
+
+(define-public go-github-com-muesli-reflow-wrap
+  (package
+    (inherit go-github-com-muesli-reflow-wordwrap)
+    (name "go-github-com-muesli-reflow-wrap")
+    (arguments
+     `(#:import-path "github.com/muesli/reflow/wrap"
+       #:unpack-path "github.com/muesli/reflow"))))
 
 (define-public go-github-com-muesli-reflow-ansi
   (package
@@ -9600,7 +9768,7 @@ io.Writers helping you to transform blocks of text.")
 (define-public go-github-com-muesli-termenv
   (package
     (name "go-github-com-muesli-termenv")
-    (version "0.8.1")
+    (version "0.11.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9609,7 +9777,7 @@ io.Writers helping you to transform blocks of text.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0m24ljq1nq7z933fcvg99fw0fhxj9rb5ll4rlay7z2f2p59mrbdp"))))
+                "0dqvk46f6bpnkdj3dq70cwvgn1g59z3my24d0l49xvrjqirq1iv7"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/muesli/termenv"))
@@ -9806,6 +9974,114 @@ size of the terminal.")
     (description "@code{glamour} lets you render markdown documents and
 templates on ANSI compatible terminals.  You can create your own stylesheet or
 use one of our glamorous default themes.")
+    (license license:expat)))
+
+(define-public go-github-com-charmbracelet-harmonica
+  (package
+    (name "go-github-com-charmbracelet-harmonica")
+    (version "0.2.0")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/charmbracelet/harmonica")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1aasg0c0xxhwav4ivm1mqmsqab6lk407xky8c19pb85r1hdbq0n7"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "github.com/charmbracelet/harmonica"))
+    (home-page "https://github.com/charmbracelet/harmonica")
+    (synopsis "A simple, physics-based animation library")
+    (description
+     "A simple, efficient spring animation library for smooth, natural motion.")
+    (license license:expat)))
+
+(define-public go-github-com-charmbracelet-lipgloss
+  (package
+    (name "go-github-com-charmbracelet-lipgloss")
+    (version "0.6.0")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/charmbracelet/lipgloss")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1n08qq1bx3djs1qv2b8azbw3fqi5m9w1nady162rv7d3k26f6n0i"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "github.com/charmbracelet/lipgloss"))
+    (native-inputs
+     (list go-github-com-mattn-go-runewidth
+           go-github-com-muesli-reflow-ansi
+           go-github-com-muesli-reflow-indent
+           go-github-com-muesli-reflow-padding
+           go-github-com-muesli-reflow-truncate
+           go-github-com-muesli-reflow-wordwrap
+           go-github-com-muesli-reflow-wrap
+           go-github-com-muesli-termenv
+           go-github-com-lucasb-eyer-go-colorful
+           go-github-com-mattn-go-isatty))
+    (home-page "https://github.com/charmbracelet/lipgloss")
+    (synopsis "A simple, physics-based animation library")
+    (description
+     "A simple, efficient spring animation library for smooth, natural motion.")
+    (license license:expat)))
+
+(define-public go-github-com-google-btree
+  (package
+    (name "go-github-com-google-btree")
+    (version "1.1.2")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/google/btree")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "0cqa8ck26p3wqz877hcvmfss17xm8wcbwd68shxv795ppahpdd9b"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "github.com/google/btree"))
+    (home-page "https://github.com/google/btree")
+    (synopsis "Simple, ordered, in-memory data structure for Go programs")
+    (description
+     "This package provides an in-memory B-Tree implementation for Go, useful as an
+ordered, mutable data structure.")
+    (license license:asl2.0)))
+
+(define-public go-github-com-peterbourgon-diskv
+  (package
+    (name "go-github-com-peterbourgon-diskv")
+    (version "2.0.1")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/peterbourgon/diskv")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1mxpa5aad08x30qcbffzk80g9540wvbca4blc1r2qyzl65b8929b"))
+       (modules '((guix build utils)))
+       (snippet
+        '(begin
+           (substitute* "keys_test.go"
+             ((".*t.Errorf\\(\"want %d, have %d\"\\)")
+              "t.Errorf(\"want %d, have %d\", want, have)"))))))
+    (build-system go-build-system)
+    (arguments `(#:import-path "github.com/peterbourgon/diskv"
+                 #:go ,go-1.18))
+    (propagated-inputs
+     (list go-github-com-google-btree))
+    (home-page "https://github.com/peterbourgon/diskv")
+    (synopsis "A disk-backed key-value store")
+    (description
+     "Diskv (disk-vee) is a simple, persistent key-value store written in the Go
+language.  It starts with a simple API for storing arbitrary data on a filesystem by
+key, and builds several layers of performance-enhancing abstraction on top.  The end
+result is a conceptually simple, but highly performant, disk-backed storage system.")
     (license license:expat)))
 
 (define-public go-github-com-coreos-go-oidc
@@ -10289,7 +10565,7 @@ temporal directories.")
 (define-public go-github-com-twpayne-go-vfs
   (package
     (name "go-github-com-twpayne-go-vfs")
-    (version "1.5.0")
+    (version "4.1.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -10298,7 +10574,7 @@ temporal directories.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "19dm3gi45znwaqbzxhwcgkiz8059bwa3ank80hc6qhdl579bpjnz"))))
+                "1dvw3qi3ax2rbx2j5k0gkwip44ilsar2w8sm2266xfpqhm6gzakh"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/twpayne/go-vfs"))
@@ -10310,10 +10586,40 @@ temporal directories.")
 and @code{ioutil} packages that is easy to test.")
     (license license:expat)))
 
+(define-public go-github-com-twpayne-go-vfs-2.0
+  (package
+    (inherit go-github-com-twpayne-go-vfs)
+    (name "go-github-com-twpayne-go-vfs")
+    (version "2.0.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/twpayne/go-vfs")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "1h5sydpzy4yk78v83lp84dlccw412h79jxcfi5sxbb7il9xbq0y6"))))))
+
+(define-public go-github-com-twpayne-go-vfs-3.0
+  (package
+    (inherit go-github-com-twpayne-go-vfs)
+    (name "go-github-com-twpayne-go-vfs")
+    (version "3.0.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/twpayne/go-vfs")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0w7alyd2pdafny4xfi0ybpnhrwwbkb3fk73yjrwjj6h0rysvpxy2"))))))
+
 (define-public go-github-com-twpayne-go-vfsafero
   (package
     (name "go-github-com-twpayne-go-vfsafero")
-    (version "1.0.0")
+    (version "2.0.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -10322,12 +10628,12 @@ and @code{ioutil} packages that is easy to test.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "18jwxhlrjd06z8xzg9ij0irl4f79jfy5jpwiz6xqlhzb1fja19pw"))))
+                "0bnhmcy22q8iy51fjyacj560f9216fvhyjh73zq2yhhgg4kdj3zx"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/twpayne/go-vfsafero"))
     (native-inputs
-     (list go-github-com-twpayne-go-vfs go-github-com-spf13-afero))
+     (list go-github-com-twpayne-go-vfs-2.0 go-github-com-spf13-afero))
     (home-page "https://github.com/twpayne/go-vfsafero/")
     (synopsis "Compatibility later between @code{go-vfs} and @code{afero}")
     (description
@@ -10338,7 +10644,7 @@ and @code{ioutil} packages that is easy to test.")
 (define-public go-github-com-twpayne-go-xdg
   (package
     (name "go-github-com-twpayne-go-xdg")
-    (version "3.1.0")
+    (version "6.0.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -10347,12 +10653,12 @@ and @code{ioutil} packages that is easy to test.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0j8q7yzixs6jlaad0lpa8hs6b240gm2cmy0yxgnprrbpa0y2r7ln"))))
+                "0gs9fb25jfhmdxl1c5v6b3smzyddry5b893x4whyi6gy62i523ha"))))
     (build-system go-build-system)
     (arguments
-     `(#:import-path "github.com/twpayne/go-xdg/v3"))
+     `(#:import-path "github.com/twpayne/go-xdg/v6"))
     (native-inputs
-     (list go-github-com-stretchr-testify go-github-com-twpayne-go-vfs))
+     (list go-github-com-stretchr-testify go-github-com-twpayne-go-vfs-3.0))
     (home-page "https://github.com/twpayne/go-xdg/")
     (synopsis "Functions related to freedesktop.org")
     (description "Package @code{xdg} provides functions related to
@@ -12056,11 +12362,33 @@ averages.")
 string.")
     (license license:expat)))
 
+(define-public go-github-com-atotto-clipboard
+  (package
+    (name "go-github-com-atotto-clipboard")
+    (version "0.1.4")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/atotto/clipboard")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "0ycd8zkgsq9iil9svhlwvhcqwcd7vik73nf8rnyfnn10gpjx97k5"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "github.com/atotto/clipboard"
+                 #:tests? #f))          ; It seems that tests require a running X server
+    (propagated-inputs (list xclip))
+    (home-page "https://github.com/atotto/clipboard")
+    (synopsis "Clipboard for Go")
+    (description
+     "Provide copying and pasting to the Clipboard for Go.")
+    (license license:bsd-3)))
 
 (define-public go-github-com-charmbracelet-bubbletea
   (package
     (name "go-github-com-charmbracelet-bubbletea")
-    (version "0.13.2")
+    (version "0.21.0")
     (source
      (origin
        (method git-fetch)
@@ -12070,23 +12398,25 @@ string.")
        (file-name (git-file-name name version))
        (sha256
         (base32
-         "1105cggi5fwqx69m0vrhgwx6kaw82w4ahn58sj0a81603c4yvrk0"))))
+         "1f2j1gfb5sppg8h6fr0vpkg5xckj7xa2xvn13dqq3gy1dlrxv277"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/charmbracelet/bubbletea"))
     (propagated-inputs
-     `(("github.com/mattn/go-isatty" ,go-github-com-mattn-go-isatty)
-       ("github.com/muesli/termenv" ,go-github-com-muesli-termenv)
-       ("github.com/mattn/go-runewidth" ,go-github-com-mattn-go-runewidth)
-       ("go-github-com-muesli-reflow-indent" ,go-github-com-muesli-reflow-indent)
-       ("go-github-com-muesli-reflow-ansi" ,go-github-com-muesli-reflow-ansi)
-       ("go-github-com-lucasb-eyer-go-colorful" ,go-github-com-lucasb-eyer-go-colorful)
-       ("github.com/containerd/console" ,go-github-com-containerd-console)
-       ("go-github-com-muesli-reflow-truncate" ,go-github-com-muesli-reflow-truncate)
-       ("go-golang-org-x-crypto" ,go-golang-org-x-crypto)
-       ("go-golang-org-x-sys" ,go-golang-org-x-sys)
-       ("go-golang-org-x-term" ,go-golang-org-x-term)
-       ("github.com/mattn/go-isatty" ,go-github-com-mattn-go-isatty)))
+     (list go-github-com-mattn-go-isatty
+           go-github-com-muesli-termenv
+           go-github-com-mattn-go-runewidth
+           go-github-com-muesli-reflow-indent
+           go-github-com-muesli-reflow-ansi
+           go-github-com-muesli-ansi
+           go-github-com-muesli-cancelreader
+           go-github-com-lucasb-eyer-go-colorful
+           go-github-com-containerd-console
+           go-github-com-muesli-reflow-truncate
+           go-golang-org-x-crypto
+           go-golang-org-x-sys
+           go-golang-org-x-term
+           go-github-com-mattn-go-isatty))
     (home-page "https://github.com/charmbracelet/bubbletea")
     (synopsis "Powerful little TUI framework")
     (description
@@ -12094,6 +12424,30 @@ string.")
 well-suited for simple and complex terminal applications, either inline,
 full-window, or a mix of both.")
     (license license:asl2.0)))
+
+(define-public go-github-com-charmbracelet-bubbles
+    (package
+      (name "go-github-com-charmbracelet-bubbles")
+      (version "0.14.0")
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://github.com/charmbracelet/bubbles")
+                      (commit (string-append "v" version))))
+                (file-name (git-file-name name version))
+                (sha256
+                 (base32
+                  "1r00jqc2wwcxm8yllz0pfkspa1d8sk9li0p3hbg7j5b5lp6pqd5b"))))
+      (build-system go-build-system)
+      (arguments
+       '(#:import-path "github.com/charmbracelet/bubbles"))
+      (native-inputs
+       (list go-github-com-bradenhilton-cityhash go-golang-org-x-text))
+      (synopsis "Get hash to differentiate between Mozilla software installs")
+      (description "Gets the hash used to differentiate between installs of Mozilla
+software in @code{installs.ini} and @code{profiles.ini}.")
+      (home-page "https://github.com/charmbracelet/bubbles")
+      (license license:expat)))
 
 (define-public go-github-com-containerd-console
   (package

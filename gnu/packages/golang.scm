@@ -9722,7 +9722,7 @@ size of the terminal.")
 (define-public go-github-com-yuin-goldmark
   (package
     (name "go-github-com-yuin-goldmark")
-    (version "1.2.1")
+    (version "1.3.7")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9731,7 +9731,7 @@ size of the terminal.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "12rsnsf65drcp0jfw2jl9w589vsn3pxdk1zh3v9q908iigngrcmy"))))
+                "0dwih1sx5rhwkpzlwaliimq4x5vqx9v0jzk1b1j6ryw9yak14wa0"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/yuin/goldmark"))
@@ -9740,10 +9740,34 @@ size of the terminal.")
     (description "This package provides a markdown parser.")
     (license license:expat)))
 
+(define-public go-github-com-yuin-goldmark-emoji
+  (package
+    (name "go-github-com-yuin-goldmark-emoji")
+    (version "1.0.2")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/yuin/goldmark-emoji")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "1plswhgqdw54wz6vm1qinzhm3jr4ppvldzr0yppcgxs5g4sy3z26"))))
+    (build-system go-build-system)
+    (arguments
+     `(#:import-path "github.com/yuin/goldmark-emoji"))
+    (native-inputs
+     (list go-github-com-yuin-goldmark))
+    (home-page "https://github.com/yuin/goldmark-emoji/")
+    (synopsis "An emoji extension for the goldmark markdown parser")
+    (description "@code{goldmark-emoji} is an extension for the goldmark that parses
+@code{:joy:} style emojis.")
+    (license license:expat)))
+
 (define-public go-github-com-charmbracelet-glamour
   (package
     (name "go-github-com-charmbracelet-glamour")
-    (version "0.2.0")
+    (version "0.6.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9752,7 +9776,7 @@ size of the terminal.")
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "1idq8d13rp1hx2a1xak31fwl9fmi09p2x4ymvzl7aj850saw5w0z"))))
+                "07yww6b74ymp5il6dxns2ibl2im7534l44dg8aqmlsddjysv4zx2"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/charmbracelet/glamour"))
@@ -9775,6 +9799,7 @@ size of the terminal.")
            go-github-com-mattn-go-isatty
            go-github-com-olekukonko-tablewriter
            go-github-com-yuin-goldmark
+           go-github-com-yuin-goldmark-emoji
            go-golang-org-x-net))
     (home-page "https://github.com/charmbracelet/glamour/")
     (synopsis "Write handsome command-line tools with glamour")

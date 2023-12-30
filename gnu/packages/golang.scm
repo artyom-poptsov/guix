@@ -9361,7 +9361,7 @@ synchronizing plain text:
 (define-public go-github-com-alecthomas-chroma
   (package
     (name "go-github-com-alecthomas-chroma")
-    (version "0.8.0")
+    (version "0.10.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -9370,7 +9370,7 @@ synchronizing plain text:
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "066a6rdmf670d3v5sc7chbn7db09ldgxjympb03pcqwk644dixb1"))))
+                "0hjzb61m5lzx95xss82wil9s8f9hbw1zb3jj73ljfwkq5lqk76zq"))))
     (build-system go-build-system)
     (arguments
      `(#:import-path "github.com/alecthomas/chroma"))
@@ -9379,6 +9379,7 @@ synchronizing plain text:
            go-github-com-alecthomas-assert
            go-github-com-alecthomas-colour
            go-github-com-alecthomas-repr
+           go-github-com-stretchr-testify
            go-github-com-mattn-go-isatty
            go-github-com-sergi-go-diff))
     (home-page "https://github.com/alecthomas/chroma/")

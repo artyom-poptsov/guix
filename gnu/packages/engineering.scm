@@ -3777,6 +3777,33 @@ visualization, matrix manipulation.")
        "Prusa Block & Binary G-code reader/writer/converter.")
       (license license:agpl3))))
 
+(define-public prusa-wxwidgets
+  ;; There is no tag/release, all patches are in separate branch.
+  (let ((commit "78aa2dc0ea7ce99dc19adc1140f74c3e2e3f3a26"))
+    (package
+      (inherit wxwidgets)
+      (name "prusa-wxwidgets")
+      (version "3.2.0")
+      (home-page "https://github.com/prusa3d/wxWidgets")
+      (source
+       (origin
+         (inherit (package-source wxwidgets))
+         (method git-fetch)
+         (uri
+          (git-reference
+           (url home-page)
+           (commit commit)
+           (recursive? #t)))
+         (file-name (git-file-name name version))
+         (patches (search-patches "prusa-wxwidgets-makefile-fix.patch"))
+         (sha256
+          (base32
+           "02nd07c23xbclnf1jjfbv6r5vqjb80gsdy2l559c5qzgdcvfd2xd"))))
+      (arguments
+       (substitute-keyword-arguments (package-arguments wxwidgets)
+         ((#:configure-flags flags)
+          #~(cons "--disable-glcanvasegl" #$flags)))))))
+
 (define-public prusa-slicer
   (package
     (name "prusa-slicer")

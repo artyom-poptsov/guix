@@ -3807,7 +3807,7 @@ visualization, matrix manipulation.")
 (define-public prusa-slicer
   (package
     (name "prusa-slicer")
-    (version "2.5.2")
+    (version "2.7.4")
     (source
      (origin
        (method git-fetch)
@@ -3816,13 +3816,11 @@ visualization, matrix manipulation.")
          (url "https://github.com/prusa3d/PrusaSlicer")
          (commit (string-append "version_" version))))
        (file-name (git-file-name name version))
-       (sha256 (base32 "02qcrw3fa0d8ldbp73hp14l1qxbp3f4608j4csc07ny00ra42151"))
-       (patches (search-patches "prusa-slicer-boost-fixes.patch"
-                                "prusa-slicer-fix-tests.patch"
-                                "prusa-slicer-with-cereal-1.3.1.patch"))
+       (sha256 (base32 "0s1cfvhfilyv0y98asr61c6rwlgyr1hf5v5hg8q9zwmzm2bkcql3"))
+       (patches (search-patches "prusa-slicer-fix-tests.patch"))
        (modules '((guix build utils)))
        (snippet
-        '(begin
+        `(begin
            ;; Prusa slicer bundles a lot of dependencies in src/ directory.
            ;; Most of them contain prusa-specific modifications (e.g. avrdude),
            ;; but others do not. Here we replace the latter with Guix packages.
@@ -3830,10 +3828,12 @@ visualization, matrix manipulation.")
            (delete-file-recursively "src/hidapi")
            (delete-file-recursively "src/eigen")
            (delete-file-recursively "src/libigl/igl")
+           (substitute* "CMakeLists.txt"
+             (("add_library\\(libexpat INTERFACE\\)")
+              ""))
+           (substitute* "src/libigl/CMakeLists.txt"
+             (("target_link_libraries\\(libigl INTERFACE igl::core\\)") ""))
            (substitute* "src/CMakeLists.txt"
-             (("add_subdirectory\\(libigl\\)" all)
-              (string-append
-               all "\ninclude_directories(libigl INTERFACE libigl::core)"))
              (("add_subdirectory\\(hidapi\\)")
               "pkg_check_modules(HIDAPI REQUIRED hidapi-hidraw)")
              (("include_directories\\(hidapi/include\\)")
@@ -3846,13 +3846,26 @@ visualization, matrix manipulation.")
              (("\\bhidapi\\b") "${HIDAPI_LIBRARIES}"))))))
     (build-system cmake-build-system)
     (arguments
-     `(#:configure-flags
-       '("-DSLIC3R_FHS=1" ;; Use The Filesystem Hierarchy Standard.
-         "-DSLIC3R_GTK=3" ;; Use GTK+
-         ;; Use wxWidgets 3.0.x.x to prevent GUI crashes when adding support enforcers.
-         "-DSLIC3R_WX_STABLE=1")))
+     (list #:configure-flags
+           #~(list "-DSLIC3R_FHS=1" ;; Use The Filesystem Hierarchy Standard.
+                   "-DSLIC3R_GTK=3" ;; Use GTK+
+                   ;; Use wxWidgets 3.0.x.x to prevent GUI crashes when adding support enforcers.
+                   "-DSLIC3R_WX_STABLE=1"
+                   (format #f "-Dlibigl_DIR=~a"
+                           (search-input-directory %build-inputs
+                                                   "lib/cmake/igl/"))
+                   (format #f "-DCatch2_DIR=~a"
+                           (search-input-directory %build-inputs
+                                                   "lib/cmake/Catch2/")))
+           #:phases
+           #~(modify-phases %standard-phases
+               (add-after 'unpack 'fix-include-paths
+                 (lambda _
+                   (substitute* "tests/libslic3r/test_quadric_edge_collapse.cpp"
+                     (("#include <libigl/igl/qslim.h>")
+                      "#include <igl/qslim.h>")))))))
     (native-inputs
-     (list pkg-config))
+     (list pkg-config catch2))
     (inputs
      (list boost
            cereal
@@ -3878,9 +3891,13 @@ visualization, matrix manipulation.")
            pango
            tbb
            eudev
-           ;; prusa-slicer 2.5 segfaults on startup with wxwidgets 3.2
-           ;; See https://github.com/prusa3d/PrusaSlicer/issues/8299
-           wxwidgets-3.0
+           qhull
+           nanosvg
+           heatshrink
+           ;; XXX: Using Prusa wxWidgets fork as PrusaSlicer segfaults when compiled
+           ;; with regular wxwidgets.
+           prusa-wxwidgets
+           prusa-libbgcode
            zlib))
     (home-page "https://www.prusa3d.com/prusaslicer/")
     (synopsis "G-code generator for 3D printers (RepRap, Makerbot, Ultimaker etc.)")

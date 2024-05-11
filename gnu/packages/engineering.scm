@@ -3753,6 +3753,30 @@ perform various useful functions such as:
 visualization, matrix manipulation.")
     (license (list license:gpl3 license:mpl2.0))))
 
+(define-public prusa-libbgcode
+  (let ((commit "8ae75bd0eea622f0e34cae311b3bd065b55eae9b")
+        (revision "0"))
+    (package
+      (name "prusa-libbgcode")
+      (version (git-version "0.0.0" revision commit))
+      (source
+       (origin
+         (method git-fetch)
+         (uri (git-reference
+               (url "https://github.com/prusa3d/libbgcode")
+               (commit commit)))
+         (file-name (git-file-name name version))
+         (sha256 (base32 "0fjx2ijz9zqpqs486lcrrrhqvmfzrpb8j6v57l0jiynavwv3kznw"))))
+      (native-inputs (list catch2))
+      (propagated-inputs
+       (list zlib boost heatshrink))
+      (build-system cmake-build-system)
+      (home-page "https://github.com/prusa3d/libbgcode")
+      (synopsis "Prusa Block & Binary G-code reader/writer/converter")
+      (description
+       "Prusa Block & Binary G-code reader/writer/converter.")
+      (license license:agpl3))))
+
 (define-public prusa-slicer
   (package
     (name "prusa-slicer")

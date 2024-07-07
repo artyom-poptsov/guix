@@ -28,11 +28,13 @@
   #:use-module (gnu packages assembly)
   #:use-module (gnu packages audio)
   #:use-module (gnu packages autotools)
+  #:use-module (gnu packages boost)
   #:use-module (gnu packages check)
   #:use-module (gnu packages cmake)
   #:use-module (gnu packages compression)
   #:use-module (gnu packages c)
   #:use-module (gnu packages cpp)
+  #:use-module (gnu packages gcc)
   #:use-module (gnu packages digest)
   #:use-module (gnu packages fcitx)
   #:use-module (gnu packages fcitx5)
@@ -82,7 +84,7 @@
   #:use-module (guix build-system python)
   #:use-module (guix build-system qt))
 
-(define %telegram-version "4.8.1")
+(define %telegram-version "4.9.0")
 
 (define libyuv-for-telegram-desktop
   (let ((commit "77c2121f7e6b8e694d6e908bbbe9be24214097da")
@@ -104,12 +106,12 @@
     (method git-fetch)
     (uri (git-reference
           (url "https://github.com/desktop-app/cmake_helpers.git")
-          (commit "6ab5543b3dd1e40979d258e46d03376931b6c37b")))
+          (commit "78b441c9c6ad8a14a8f97a28825babcadc6bf781")))
     (file-name
      (git-file-name "cmake-helpers-for-telegram-desktop" %telegram-version))
     (sha256
      (base32
-      "0y96mvzs113zh8bdw1h3i6l0pgwg93rigrday8kfdg4magz686k6"))))
+      "172kf8632vlf0bgyjl9rqbg3iad2pkdz1jq4lq894dvjxqrvqabj"))))
 
 (define codegen-for-telegram-desktop
   (origin
@@ -415,7 +417,7 @@ Telegram project, for its use in telegram desktop client.")
        (file-name
         (git-file-name name version))
        (sha256
-        (base32 "0g47ffamh1csp79yzkv28v3qjkhjacj0c7pjf53n1ks80j5hc2j0"))
+        (base32 "1ccms29kv5i485jp4a0978213610zz8inzsg6wz6svrldn0viap6"))
        (patches
         (search-patches
          ;; https://github.com/telegramdesktop/tdesktop/pull/24126
@@ -456,7 +458,13 @@ Telegram project, for its use in telegram desktop client.")
               "-DTDESKTOP_DISABLE_LEGACY_TGVOIP=ON"
               "-DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON"
               "-DDESKTOP_APP_DISABLE_AUTOUPDATE=ON"
-              "-DDESKTOP_APP_USE_PACKAGED_RLOTTIE=ON")
+              "-DDESKTOP_APP_USE_PACKAGED_RLOTTIE=ON"
+              "-DBUILD_WITH_QT6=ON"
+              "-DCMAKE_CXX_FLAGS=-std=gnu++20"
+              "-DINTERNAL_EXPECTED=OFF"
+              (string-append "-DKF5CoreAddons_DIR="
+                             #$(this-package-input "kcoreaddons")
+                             "/lib/cmake/KF5CoreAddons/"))
            #:phases
            #~(modify-phases %standard-phases
                (add-after 'unpack 'unpack-additional-sources
@@ -467,7 +475,8 @@ Telegram project, for its use in telegram desktop client.")
                       ((dst src)
                        (copy-recursively src dst)
                        (for-each make-file-writable (find-files dst))))
-                    '(("cmake" #$cmake-helpers-for-telegram-desktop)
+                    `(("cmake" #$cmake-helpers-for-telegram-desktop)
+                      ("cmake/external/glib/cppgir" #$(package-source cppgir))
                       ("Telegram/codegen" #$codegen-for-telegram-desktop)
                       ("Telegram/lib_base" #$lib-base-for-telegram-desktop)
                       ("Telegram/lib_crl" #$lib-crl-for-telegram-desktop)
@@ -481,26 +490,32 @@ Telegram project, for its use in telegram desktop client.")
                       ("Telegram/lib_webrtc" #$lib-webrtc-for-telegram-desktop)
                       ("Telegram/lib_webview" #$lib-webview-for-telegram-desktop)
                       ("Telegram/ThirdParty/cld3" #$cld3-for-telegram-desktop)
+                      ("Telegram/ThirdParty/GSL" #$(package-source c++-gsl))
                       ("Telegram/ThirdParty/tgcalls" #$tgcalls-for-telegram-desktop)))))
                (add-after 'install 'glib-or-gtk-compile-schemas
                  (assoc-ref glib-or-gtk:%standard-phases 'glib-or-gtk-compile-schemas))
                (add-after 'glib-or-gtk-compile-schemas 'glib-or-gtk-wrap
                  (assoc-ref glib-or-gtk:%standard-phases 'glib-or-gtk-wrap)))))
     (native-inputs
-     (list `(,glib "bin")
+     (list expected-lite
+           gcc-14
+           `(,glib "bin")
+           gobject-introspection
            `(,gtk+ "bin")
            pkg-config
            python-wrapper))
     (inputs
      (list abseil-cpp-cxxstd17
            alsa-lib
+           boost
            c++-gsl
+           cppgir
            crc32c
            fcitx-qt5
            fcitx5-qt
            ffmpeg
            glib
-           glibmm-2.76
+           glibmm
            gtk+
            hime
            hunspell
@@ -522,11 +537,11 @@ Telegram project, for its use in telegram desktop client.")
            pulseaudio
            protobuf
            qrcodegen-cpp
-           qtbase-5
-           qtdeclarative-5
-           qtimageformats-5
-           qtsvg-5
-           qtwayland-5
+           qtbase
+           qtdeclarative
+           qtimageformats
+           qtsvg
+           qtwayland
            range-v3
            rlottie-for-telegram-desktop
            rnnoise

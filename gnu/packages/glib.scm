@@ -55,6 +55,7 @@
   #:use-module (gnu packages file)
   #:use-module (gnu packages flex)
   #:use-module (gnu packages freedesktop)
+  #:use-module (gnu packages gcc)
   #:use-module (gnu packages gettext)
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages graphviz)
@@ -104,6 +105,39 @@
             telepathy-glib
             perl-net-dbus
             perl-net-dbus-glib))
+
+(define-public cppgir
+  (package
+    (name "cppgir")
+    (version "2.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://gitlab.com/mnauw/cppgir")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0cj4myqzb28hgb7zlxlba9y8n4ysxkvv2y9wy6f7ps58mr18h7bl"))))
+    (build-system cmake-build-system)
+    (native-inputs (list expected-lite gcc-14))
+    (inputs (list boost check))
+    (propagated-inputs (list glib))
+    (arguments
+     (list #:configure-flags #~(list "-DCMAKE_CXX_FLAGS=-std=gnu++20"
+                                     "-DINTERNAL_EXPECTED=OFF")))
+    (home-page "https://gitlab.com/mnauw/cppgir")
+    (synopsis "GObject-Introspection C++ binding wrapper generator")
+    (description
+     "@code{cppgir} is a @url{https://wiki.gnome.org/Projects/GObjectIntrospection,
+GObject-Introspection} C++ binding wrapper generator.  That is, it processes
+@code{.gir} files derived from GObject-Introspection annotations into a set of C++
+files defining suitable namespaces, classes and other types that together from a C++
+binding.  In this way, the plain C libraries and objects become available as native
+objects along with (RAII) managed resource handling.  The generated code only
+requires a C++14 compiler and library (as well as obviously the underlying C headers
+and libraries that are being wrapped).")
+    (license license:expat)))
 
 (define dbus
   (package

@@ -1553,6 +1553,42 @@ tools.")
 ECMA-48} specs.")
     (license license:expat)))
 
+(define-public go-github-com-charmbracelet-x-exp-golden
+  (package
+    (name "go-github-com-charmbracelet-x-exp-golden")
+    (version "0.0.0-20241121171228-5bc00623ea2f")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/charmbracelet/x")
+             (commit (go-version->git-ref version
+                                          #:subdir "exp/golden"))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "016s67690dr3w3an6m24q6f4vrmwpk0qd4akvvh1dzpfyf4khxd4"))))
+    (build-system go-build-system)
+    (arguments
+     (list
+      #:import-path "github.com/charmbracelet/x/exp/golden"
+      #:unpack-path "github.com/charmbracelet/x/"
+      #:phases #~(modify-phases %standard-phases
+                   (add-before 'check 'fix-tests
+                     (lambda _
+                       (let ((dir "src/github.com/charmbracelet/x/exp/golden"))
+                         (for-each (lambda (f)
+                                     (if (file-is-directory? f)
+                                         (chmod f #o666)
+                                         (chmod f #o644)))
+                                   (find-files dir))))))))
+    (propagated-inputs (list go-github-com-aymanbagabas-go-udiff))
+    (home-page "https://github.com/charmbracelet/x")
+    (synopsis "Verify @code{.golden} file equality")
+    (description "Golden files (@code{.golden}) contain the raw expected output of
+tests, which can contain control codes and escape sequences.  @code{golden} package
+provides an API for comparing Golden files.")
+    (license license:expat)))
+
 (define-public go-github-com-chzyer-logex
   (package
     (name "go-github-com-chzyer-logex")

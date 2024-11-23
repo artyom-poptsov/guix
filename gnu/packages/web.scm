@@ -5605,7 +5605,7 @@ JSON, XML, properties, CSV and TSV.")
     (build-system go-build-system)
     (arguments
      (list
-      #:import-path "github.com/itchyny/gojq/cmd/gojq"
+      #:import-path "github.com/itchyny/gojq/"
       #:unpack-path "github.com/itchyny/gojq"))
     (inputs
      (list go-github-com-google-go-cmp

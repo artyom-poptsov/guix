@@ -86,7 +86,8 @@
   #:use-module (gnu packages golang-web)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages specifications)
-  #:use-module (gnu packages xdisorg))
+  #:use-module (gnu packages xdisorg)
+  #:use-module (gnu packages web))
 
 ;;; Commentary:
 ;;;
@@ -6076,6 +6077,40 @@ list of sentences.")
      "This package provides a library and CLI program to parse the
 @code{org-mode} file format alongside a static site generator with HTML &
 pretty printed rendering in Golang.")
+    (license license:expat)))
+
+(define-public go-github-com-noahgorstein-jqp
+  (package
+    (name "go-github-com-noahgorstein-jqp")
+    (version "0.7.0")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/noahgorstein/jqp")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "11xqh4113gkzp32hd4dg4cvjp40q3hxfh3889wd4bw2snl0alvcb"))))
+    (build-system go-build-system)
+    (arguments
+     (list
+      #:go go-1.22
+      #:embed-files #~(list ".*.xml")
+      #:import-path "github.com/noahgorstein/jqp"))
+    (propagated-inputs (list go-github-com-spf13-viper
+                             go-github-com-spf13-cobra
+                             go-github-com-muesli-termenv
+                             go-github-com-itchyny-gojq
+                             go-github-com-itchyny-timefmt-go
+                             go-github-com-charmbracelet-lipgloss
+                             go-github-com-charmbracelet-bubbletea
+                             go-github-com-charmbracelet-bubbles
+                             go-github-com-atotto-clipboard
+                             go-github-com-alecthomas-chroma-v2))
+    (home-page "https://github.com/noahgorstein/jqp")
+    (synopsis "jqp")
+    (description "a TUI playground for exploring jq.")
     (license license:expat)))
 
 (define-public go-github-com-nsqio-go-diskqueue

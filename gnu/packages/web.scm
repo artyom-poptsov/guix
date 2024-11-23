@@ -5627,7 +5627,8 @@ processor.")
     (arguments
      (ensure-keyword-arguments
       (package-arguments go-github-com-itchyny-gojq)
-      (list #:install-source? #f)))))
+      (list #:import-path "github.com/itchyny/gojq/cmd/gojq"
+            #:install-source? #f)))))
 
 (define-public pup
   (let ((revision "1")

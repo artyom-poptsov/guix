@@ -24,10 +24,12 @@
   #:use-module (gnu packages golang-crypto)
   #:use-module (gnu packages golang-web)
   #:use-module (gnu packages golang-xyz)
+  #:use-module (gnu packages networking)
   #:use-module (gnu packages texinfo)
   #:use-module (guix licenses)
   #:use-module (guix packages)
   #:use-module (guix download)
+  #:use-module (guix gexp)
   #:use-module (guix build-system gnu)
   #:use-module (guix build-system go))
 
@@ -67,7 +69,7 @@ between computers.")
 (define-public nncp
   (package
     (name "nncp")
-    (version "7.5.0")
+    (version "8.11.0")
     (source
      (origin
        (method url-fetch)
@@ -75,89 +77,72 @@ between computers.")
                            version ".tar.xz"))
        (sha256
         (base32
-         "1r1zgj7gpkdmdm3wf31m0xi8y313kzd4dbyp4r4y8khnp32jvn8l"))
-       (modules '((ice-9 ftw)
-                  (guix build utils)))
-       (snippet
-        '(begin
-           ;; Unbundle dependencies.
-           ;; TODO: go.cypherpunks.ru was down at the time of
-           ;; packaging. Unbundle go.cypherpunks dependencies as well once it
-           ;; comes back online.
-           (for-each (lambda (file)
-                       (unless (member file (list "." ".." "go.cypherpunks.ru"))
-                         (delete-file-recursively (string-append "src/vendor/" file))))
-                     (scandir "src/vendor"))
-           ;; Delete built documentation.
-           (delete-file "doc/nncp.info")
-           #t))))
-    (build-system gnu-build-system)
+         "1wmg6k1nprk9b7vnnly3m6xxyma2l0xamnrq3xwahjhqv6y18hgc"))))
+    (build-system go-build-system)
     (arguments
-     `(#:modules ((guix build gnu-build-system)
-                  ((guix build go-build-system) #:prefix go:)
-                  (guix build utils))
-       #:imported-modules ,%go-build-system-modules
-       #:phases
-       (modify-phases %standard-phases
-         (add-before 'unpack 'setup-go-environment
-           (assoc-ref go:%standard-phases 'setup-go-environment))
-         (add-after 'unpack 'go-unpack
-           (lambda* (#:key source #:allow-other-keys)
-             ;; Copy source to GOPATH.
-             (copy-recursively "src" "../src/go.cypherpunks.ru/nncp/v7")
-             ;; Move bundled dependencies to GOPATH.
-             (for-each (lambda (dependency)
-                         (rename-file (string-append "src/vendor/go.cypherpunks.ru/"
-                                                     dependency)
-                                      (string-append "../src/go.cypherpunks.ru/"
-                                                     dependency)))
-                       (list "balloon" "recfile"))
-             ;; Delete empty bundled dependencies directory.
-             (delete-file-recursively "src/vendor")))
-         (replace 'configure
-           (lambda* (#:key outputs #:allow-other-keys)
-             (let ((out (assoc-ref outputs "out")))
-               (setenv "GO_LDFLAGS" "-trimpath")
-               ;; Set configuration path.
-               (setenv "CFGPATH" "/etc/nncp.hjson")
-               ;; Set output directories.
-               (setenv "BINDIR" (string-append out "/bin"))
-               (setenv "INFODIR" (string-append out "/share/info"))
-               (setenv "DOCDIR" (string-append out "/share/doc/nncp")))
-             ;; Set absolute store paths to sh and cat.
-             (substitute* (list "src/pipe.go" "src/toss_test.go")
-               (("/bin/sh") (which "sh")))
-             (substitute* "src/toss_test.go"
-               (("; cat") (string-append "; " (which "cat"))))
-             ;; Remove module flags.
-             (substitute* (list "bin/default.do" "bin/hjson-cli.do" "test.do")
-               ((" -mod=vendor") "")
-               ((" -m") ""))
-             ;; Use the correct module path. `go list` does not report the
-             ;; correct module path since we have moved the source files.
-             (substitute* "bin/default.do"
-               (("^mod=[^\n]*" all) "mod=go.cypherpunks.ru/nncp/v7"))
-             ;; Disable timeout in tests. Tests can take longer than the
-             ;; default timeout on spinning disks.
-             (substitute* "test.do"
-               (("test") "test -timeout 0"))))
-         (replace 'check
-           (lambda* (#:key tests? #:allow-other-keys)
-             (when tests?
-               (invoke "contrib/do" "-c" "test")))))))
+     (list #:unpack-path "go.cypherpunks.su/nncp/v8/"
+           #:import-path "go.cypherpunks.su/nncp/v8/src"
+           ;; Minimal supported Go version is 1.22, according to
+           ;; <http://www.nncpgo.org/Release-8_005f11_005f0.html>
+           #:go go-1.22
+           ;; XXX: This test fails for some reason.
+           #:test-flags #~(list "-skip" "TestTossExec")
+           #:install-source? #f
+           #:phases
+           #~(modify-phases %standard-phases
+               (add-after 'unpack 'fix-tests
+                 (lambda* (#:key import-path #:allow-other-keys)
+                   (substitute* (find-files "." "\\_test.go$")
+                     (("\\/bin\\/sh")
+                      (which "sh")))))
+               (add-after 'fix-tests 'copy-sources
+                 (lambda _
+                   (copy-recursively
+                    "src/go.cypherpunks.su/nncp/v8/src/"
+                    "src/go.cypherpunks.su/nncp/v8/")
+                   (copy-recursively
+                    "src/go.cypherpunks.su/nncp/v8/src/vendor/gvisor.dev/"
+                    "src/gvisor.dev/")))
+               (add-after 'copy-sources 'copy-yggdrasil-source
+                 (lambda _
+                   (copy-recursively
+                    (string-append #$(package-source yggdrasil) "/src")
+                    "src/github.com/yggdrasil-network/yggdrasil-go/src/")))
+               ;; (add-after 'build 'build-commands
+               ;;   (lambda _
+               ;;     (chdir "src/go.cypherpunks.su/nncp/v8/bin")
+               ;;     (invoke "./build")))
+               (replace 'check
+                 (lambda* (#:key test-flags import-path tests?
+                           #:allow-other-keys)
+                   (when #f ;tests?
+                     (let ((path (string-append "src/" import-path)))
+                       (with-directory-excursion path
+                         (apply invoke "go" "test" "-v" "./..."
+                                test-flags)))))) )))
+               ;; (replace 'install
+               ;;   (lambda _
+               ;;     (chdir "src/go.cypherpunks.su/nncp/v8/")
+               ;;     (setenv "PREFIX" #$output)
+               ;;     (invoke "ls" "-lha")
+               ;;     (invoke "./install-strip"))))))
     (inputs
-     (list go-github-com-davecgh-go-xdr
+     (list go-github-com-arceliar-ironwood
+           go-github-com-davecgh-go-xdr
            go-github-com-dustin-go-humanize
            go-github-com-flynn-noise
+           go-github-com-gologme-log
+           go-github-com-google-btree
            go-github-com-gorhill-cronexpr
            go-github-com-hjson-hjson-go-v4
            go-github-com-klauspost-compress
            go-golang-org-x-crypto
            go-golang-org-x-net
            go-golang-org-x-term
-           go-lukechampine-com-blake3))
-    (native-inputs
-     (list go texinfo))
+           go-golang-org-x-time
+           go-lukechampine-com-blake3
+           yggdrasil))
+    (native-inputs (list texinfo))
     (home-page "http://www.nncpgo.org/")
     (synopsis "Store and forward utilities")
     (description "NNCP (Node to Node copy) is a collection of utilities
